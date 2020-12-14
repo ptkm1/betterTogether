@@ -1,20 +1,44 @@
-import React, {useEffect,useState} from 'react';
-import api from '../../../service/api';
-//import Cleave from 'cleave.js/react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useEffect, useState } from "react";
+import {useHistory} from 'react-router-dom';
+import api from "../../../service/api";
+import { IoIosBarcode, IoMdCard } from "react-icons/io";
 
-import axios from 'axios';
+import axios from "axios";
+import Cards from 'react-credit-cards'
+import 'react-credit-cards/es/styles-compiled.css'
 
 //components
-import Navbar from '../../../components/menu/menu';
+import Navbar from "../../../components/menu/menu";
+import {
+  Container,
+  Compra,
+  PessoalInfo,
+  TituloSection,
+  DadosEntrega,
+  DadosCartao,
+  Direita,
+  Cartões,
+  Form,
+  Baixo,
+  Form2,
+  Form3,
+  InfoCartao,
+  InfoEndereco,
+  InputsCartao,
+  Produto,
+  CarrinhoDeCompras,
+  Botao,
+  PagBotao
+} from "./styles.js";
+import { version } from "react-dom";
 
-//style
-import { Container, Compra, PessoalInfo,TituloSection, DadosEntrega,DadosCartao, Direita, Cartao, Form, Baixo, Form2, Form3, InfoCartao, InfoEndereco, Botao } from './styles.js';
-
-export default function Comprar(){
+export default function Comprar() {
   //Variáveis de estado, resgatados do storage
   const [user, setUser] = useState([]);
   const [endereco, setEndereco] = useState([]);
   const [items, setItems] = useState([]);
+  const [ totalItens, setTotalItens ] = useState("");
 
   //Variáveis de estado, para armazenar as values dos inputs.
   const [numResid, setNumResid] = useState("");
@@ -28,11 +52,14 @@ export default function Comprar(){
   const [referencia, setRef] = useState("");
   const [cep, setCep] = useState("");
   const [ruaNum, setRuaNum] = useState(0);
+  //Var de estado para Receber Resposta
+  const [metodoPagamento, setMetodoPagamento] = useState("");
+  const [pagamento, setPagamento] = useState([]);
+  const [focus, setFocus] = useState("");
+  const history = useHistory();
 
-    //Var de estado para Receber Resposta
-
-    const [ pagamento, setPagamento ] = useState([]);
-
+  console.log(endereco)
+  //CRIANDO OBJETOS PARA PASSAR PARA O PAGARME DE COSTUMER E SHIPPING E ADRESS ~~
   //Criando Costumer
   const costumer = {
     external_id: "#3311",
@@ -47,7 +74,7 @@ export default function Comprar(){
       },
     ],
     phone_numbers: [`+55${numeroTel}`, "+5511888889999"],
-    birthday: "1965-01-01",
+    birthday: "2000-01-01",
   };
 
   //Criando adress para usar em billing e shipping
@@ -82,8 +109,6 @@ export default function Comprar(){
     let precoSemPonto = preco + "";
     precoSemPonto = precoSemPonto.replace(".", "");
     precoSemPonto = parseInt(precoSemPonto);
-
-    
     return {
       id: `rb${e.id_produto}`,
       title: e.produto,
@@ -92,77 +117,75 @@ export default function Comprar(){
       tangible: true,
     };
   });
-
- console.log(items)
-      
+  //Pegando o valor total
   let valorTotal = meusItems.map((e) => {
-      
-      let qtdItem = e.quantity;
-      //console.log(qtdItem)
+    let qtdItem = e.quantity;
+    let precoItem = e.unit_price;
+    let precoTotal = qtdItem * precoItem;
+    return precoTotal;
+  });
 
-      let precoItem = e.unit_price;
-      //console.log(precoItem)
-      
-      let precoTotal = qtdItem * precoItem;
 
-      return precoTotal;
-  })
-  
-  console.log({valorTotal: valorTotal,amount: meusItems} );
+  const carrinho = JSON.parse(localStorage.getItem('@btgther/carrinho'));
+  const [statusCarrinho, setStatusCarrinho] = useState(carrinho)
+
 
   //Resgatar informações do usuário salvos no storage
   useEffect(() => {
-    const usuario = JSON.parse(localStorage.getItem("@btgther/usuario"));
     const itemsCarrinho = JSON.parse(localStorage.getItem("@btgther/carrinho"));
-
+    const usuario = JSON.parse(localStorage.getItem("@btgther/usuario"));
     //Setar variaveis de estado
-    setEndereco(usuario.endereco);
-    setUser(usuario);
-    setItems(itemsCarrinho);
-    setCostumerNome(usuario.nome);
+      setUser(usuario);
+      setItems(itemsCarrinho)
+      setCostumerNome(usuario.nome);
   }, []);
+
+    async function frete(){
+    try{
+      const response = await api.post("/frete",{cep:cep, peso:0.40})
+      console.log(response);
+      return response;
+    }catch(error){
+      console.log(error.response)
+    }
+  }
+  useEffect(()=>{
+    function atualizador(){
+        const newParse = JSON.parse(localStorage.getItem('@btgther/carrinho'))
+        console.log(newParse)
+        frete();
+
+        return setStatusCarrinho(newParse);
+    }
+    atualizador();  
+  },[])
+
+
+ /* useEffect(() => {
+    let itemsCarrinho = JSON.parse(localStorage.getItem("@btgther/carrinho"));
+    async function getItems(){
+      if(itemsCarrinho.length === 0 || itemsCarrinho === null){
+        history.push('/')
+      }else{
+        setItems(itemsCarrinho)
+      }
+    }
+    getItems()
+  }, [])*/
+
+  
   //Pegando endereço dos correios (POR ENQUANTO PEGAREMOS O CADASTRADO NO STORAGE)
   useEffect(() => {
-    const enderecoDoCliente = JSON.parse(
-      localStorage.getItem("@btgther/usuario")
-    );
-    const enderecoSemTraço = enderecoDoCliente.endereco.cep.replace(
-      /[^\d]+/g,
-      ""
-    );
     async function BuscarCep() {
-      const CorreiosCep = await axios
-        .get(`https://viacep.com.br/ws/${enderecoSemTraço}/json/`)
-        .then((e) => {
-          return e.data;
-        });
-      return setEndereco(CorreiosCep);
+     if(cep.length === 8){
+      let CorreiosCep = await axios.get(`https://viacep.com.br/ws/${cep}/json/`).then((e)=>{return e.data;});
+          return setEndereco(CorreiosCep);
+      }
     }
     BuscarCep();
-  }, []);
-
-  useEffect(()=>{
-    if(!pagamento){
-        return alert("tá pago!");
-    }else{
-        return;
-    }
-
-  },[pagamento])
-
+  }, [cep]);
 
   async function RealizarCompra() {
-    const valores = items.map((e) => {
-      return e.preco;
-    });
-    const total = valores.reduce(
-      (total, currentElement) => total + currentElement
-    );
-
-    let totalSemPonto = total + "";
-    totalSemPonto = totalSemPonto.replace(".", "");
-    totalSemPonto = parseInt(totalSemPonto);
-
     const total1 = valorTotal.reduce(
       (total1, currentElement) => total1 + currentElement
     );
@@ -170,10 +193,10 @@ export default function Comprar(){
     let valorTotalSemPonto = total1 + "";
     valorTotalSemPonto = valorTotalSemPonto.replace(".", "");
     valorTotalSemPonto = parseInt(valorTotalSemPonto);
-
+    
     try {
-      const response = await api.post("/transaction", {
-        amount: valorTotalSemPonto,
+      const response = await api.post("/pagarme-cartao", {
+        amount: parseInt(valorTotalSemPonto),
         card_number: numeroCartao,
         card_cvv: cvv,
         card_expiration_date: dataExpiracao,
@@ -181,21 +204,55 @@ export default function Comprar(){
         customer: costumer,
         billing: billing,
         shipping: shipping,
-        items: meusItems
+        items: meusItems,
+      },{
+        infoEndereco:InfoEndereco,
+        numeroResidencia: numResid,
+        referencia: referencia,
+        nomeIdentificacao: nomeIdent,
       });
+      alert(response.status);
+      console.log(valorTotalSemPonto)
 
-
-      console.log(valorTotal)
-      alert(response.status)
-
-      return setPagamento(response);
+      setPagamento(response);
+      return window.location.href = "/"
     } catch (error) {
       console.log(error);
-      alert(error)
+      alert(error);
     }
   }
+
+  async function PagarBoleto() {
+    const total1 = valorTotal.reduce(
+      (total1, currentElement) => total1 + currentElement
+    );
+
+    let valorTotalSemPonto = total1 + "";
+    valorTotalSemPonto = valorTotalSemPonto.replace(".", "");
+    valorTotalSemPonto = parseInt(valorTotalSemPonto);
+      try{
+        const response = await api.post("/pagarme-boleto", {
+          amount: valorTotalSemPonto,
+          costumer:costumer,
+          payment_method: "boleto",
+          postback_url: "http://testenode-1.herokuapp.com/postbackboletos",
+        });
+    
+
+        /**
+         * response.data.transaction <- Objeto resposta após gerado o boleto.
+         * response.data.transaction.boleto_url <- Url do boleto, para ver o boleto em sí.
+         */
+        window.open(response.data.transaction.boleto_url)
+        alert("Boleto gerado, olhar o console, e falta aplicar o redirect para o boleto url")
+      }catch(erro){
+        alert(erro.message)
+      }
+    
+  }
   //Novos useStates
-  const [ nomeIdent, setNomeIdent ] = useState('')
+  const [nomeIdent, setNomeIdent] = useState("");
+
   
   return (
     <>
@@ -203,39 +260,36 @@ export default function Comprar(){
       <Container>
         <Compra>
           <PessoalInfo>
-        <TituloSection>
-          <h1>1</h1>
-          <h2>Informações pessoais</h2>
-        </TituloSection>
+            <TituloSection>
+              <h1>1</h1>
+              <h2>Informações pessoais</h2>
+            </TituloSection>
 
-          <Form>
-                <input
-                  type="text"
-                  placeholder="Nome de identificação"
-                  onChange={(e) => setNomeIdent(e.target.value)}
-                />
-          </Form>
-          <Form>
-                <input
-                  type="text"
-                  placeholder="CPF"
-                  onChange={(e) => setCpf(e.target.value)}
-                />
-          </Form>
+            <Form>
+              <input
+                type="text"
+                placeholder="Nome de identificação"
+                onChange={(e) => setNomeIdent(e.target.value)}
+              />
+            </Form>
+            <Form>
+              <input
+                type="text"
+                placeholder="CPF"
+                onChange={(e) => setCpf(e.target.value)}
+              />
+            </Form>
 
-          <Form>
-                <input
-                  type="text"
-                  placeholder="Telefone para contato"
-                  onChange={(e) => setNumeroTel(e.target.value)}
-                />
-          </Form>
-        
+
+            
+            <Form>
+              <input
+                type="text"
+                placeholder="Telefone para contato"
+                onChange={(e) => setNumeroTel(e.target.value)}
+              />
+            </Form>
           </PessoalInfo>
-
-
-
-
 
           <DadosEntrega>
             <TituloSection>
@@ -243,131 +297,169 @@ export default function Comprar(){
               <h2>Dados de entrega</h2>
             </TituloSection>
 
-              <Form>
-                  <input
-                    type="text"
-                    placeholder="CEP"
-                    onChange={(e) => setCep(e.target.value)}
-                  />
-                </Form>
-                <div style={{display: "flex", width: "100%"}} >
-                <Form>
-                  <input
-                      type="text"
-                      placeholder="Complemento"
-                      style={{width:"100%"}}
-                  />
-                </Form>
-                <Form>
-                  <input
-                      type="text"
-                      placeholder="Número de residência"
-                      style={{width:"100%"}}
-                      onChange={(e) => setNumResid(e.target.value)}
-                  />
-                </Form>
-              </div>
+            <Form>
+              <input
+                type="text"
+                placeholder="CEP *SEM TRAÇO*"
+                onChange={(e) => setCep(e.target.value)}
+              />
+            </Form>
 
+
+           
+            <Form>
+                <input style={{ width:"35px", margin:"5px" }} type="checkbox" /><span style={{ color:"grey"}}>Sedex</span>
+                <input style={{ width:"35px", margin:"5px", marginLeft: "10px" }} type="checkbox" /><span style={{ color:"grey"}}>PAC</span>
+            </Form>
+
+
+
+
+            <div style={{ display: "flex", width: "100%" }}>
               <Form>
                 <input
                   type="text"
-                  placeholder="Ponto de Referência"
-                  onChange={(e) => setRef(e.target.value)}
+                  placeholder="Complemento"
+                  style={{ width: "100%" }}
                 />
               </Form>
               <Form>
                 <input
                   type="text"
-                  placeholder="Cidade"
+                  placeholder="Número de residência"
+                  style={{ width: "100%" }}
+                  onChange={(e) => setNumResid(e.target.value)}
                 />
               </Form>
+            </div>
+
+            <Form>
+              <input
+                type="text"
+                placeholder="Ponto de Referência"
+                onChange={(e) => setRef(e.target.value)}
+              />
+            </Form>
+            <Form>
+              <input type="text" placeholder="Cidade" value={endereco.localidade} />
+            </Form>
+            <Form>
+              <input type="text" placeholder="Bairro" value={endereco.bairro} />
+            </Form>
+
+            <div style={{ display: "flex", width: "100%" }}>
               <Form>
-                <input
-                  type="text"
-                  placeholder="Bairro"
-                />
-              </Form>
-            
-              <div style={{display: "flex", width: "100%"}} >
-                <Form>
                 <input
                   type="text"
                   placeholder="Numero da rua"
-                  style={{width:"100%"}}
+                  style={{ width: "100%" }}
                   onChange={(e) => setRuaNum(e.target.value)}
                 />
               </Form>
-                <Form>
-                  <input
-                      type="text"
-                      placeholder="UF"
-                      style={{width:"100%"}}
-                  />
-                </Form>
-              </div>
               <Form>
-                <input
-                type="text"
-                placeholder="Nome da rua"
-                />
+                <input type="text" placeholder="UF" style={{ width: "100%" }} value={endereco.uf} />
               </Form>
-
+            </div>
+            <Form>
+              <input type="text" placeholder="Nome da rua" value={endereco.logradouro} />
+            </Form>
           </DadosEntrega>
-
 
           <DadosCartao>
             <TituloSection>
-            <h1>3</h1>
-            <h2>Dados do cartão</h2>
-          </TituloSection>
+              <h1>3</h1>
+              <h2>Dados do cartão</h2>
+            </TituloSection>
 
+            <Direita>
+              <Cartões>
+                <PagBotao onClick={()=>setMetodoPagamento("cartao")}><IoMdCard size="25px" /></PagBotao>
+                <PagBotao onClick={()=>setMetodoPagamento("")}><IoIosBarcode size="25px" /></PagBotao>
+              </Cartões>
+              <InfoCartao>
+               
+                { metodoPagamento === "cartao" ?
+                 (<InputsCartao>
+                    <Cards 
+                      number={numeroCartao}
+                      name={nomeCartao}
+                      expiry={dataExpiracao}
+                      cvc={cvv}
+                      focused={focus}
+                    />
+                      <Form>
+                        <input
+                          type="tel"
+                          placeholder="Número do cartão"
+                          value={numeroCartao}
+                          onChange={(e) => setNumeroCartao(e.target.value)}
+                          onFocus={(e)=> setFocus(e.target.name)}
+                        />
+                      </Form>
 
-          <Direita>
+                      <Form>
+                        <input
+                          type="text"
+                          placeholder="Nome escrito no cartão"
+                          value={nomeCartao}
+                          onChange={(e) => setNomeCartao(e.target.value)}
+                          onFocus={(e)=> setFocus(e.target.name)}
+                        />
+                      </Form>
+                      <Baixo>
+                        <Form3>
+                          <input
+                            type="tel"
+                            placeholder="Data expiração"
+                            value={dataExpiracao}
+                            onChange={(e) => setDataExpiracao(e.target.value)}
+                            onFocus={(e)=> setFocus(e.target.name)}
+                          />
+                        </Form3>
 
-           
-            <InfoCartao>
-             
-              <Form>
-                <input
-                  type="text"
-                  placeholder="Número do cartão"
-                  onChange={(e) => setNumeroCartao(e.target.value)}
-                />
-              </Form>
+                        <Form2>
+                          <input
+                            type="tel"
+                            placeholder="CVV"
+                            value={cvv}
+                            onChange={(e) => setCvv(e.target.value)}
+                            onFocus={(e)=> setFocus(e.target.name)}
+                          />
+                        </Form2>
+                      </Baixo>
+                      <Botao onClick={() => RealizarCompra()}>
+                        <h2>Finalizar</h2>
+                      </Botao>
+                   </InputsCartao>
+                  ) 
+                : 
+                (<button onClick={()=>PagarBoleto()}>Gerar Boleto</button>) }
 
-              <Form>
-                <input
-                  type="password"
-                  placeholder="Nome escrito no cartão"
-                  onChange={(e) => setNomeCartao(e.target.value)}
-                />
-              </Form>
-              <Baixo>
-                <Form3>
-                  <input
-                    type="text"
-                    placeholder="Data expiração"
-                    onChange={(e) => setDataExpiracao(e.target.value)}
-                  />
-                </Form3>
-
-                <Form2>
-                  <input
-                    type="text"
-                    placeholder="CVV"
-                    onChange={(e) => setCvv(e.target.value)}
-                  />
-                </Form2>
-              </Baixo>
-
-              <Botao onClick={() => RealizarCompra()}>
-                <h2>Finalizar</h2>
-              </Botao>
-            </InfoCartao>
-          </Direita>
+              </InfoCartao>
+            </Direita>
           </DadosCartao>
-        </Compra>
           
+        </Compra>
+        
+        <CarrinhoDeCompras>
+          <h1>Produtos no carrinho</h1>
+            {statusCarrinho.map(e => {
+              return(
+                <Produto>
+                      <img src={e.images} alt=""/>
+                    <div>
+                      <h1>{e.produto}</h1>
+                      <span>{e.descrisao}</span>
+                    </div>
+                    <ul>
+                      <h2>Qtd: {e.quantidade}</h2>
+                      <h2>Preço: {e.preco.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'})}</h2> 
+                    </ul>
+                </Produto>
+              )
+            })}
+            
+        </CarrinhoDeCompras>
       </Container>
     </>
   );

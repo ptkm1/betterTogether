@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect } from 'react';
 //import { Link } from 'react-router-dom';
-import { IoMdPerson,IoIosFingerPrint } from "react-icons/io";
+import { IoMdPerson,IoIosFingerPrint, IoIosMail, IoIosPerson } from "react-icons/io";
 import Logo from '../../../assets/logowhite.svg';
 import './cadastro.css';
 import api from '../../../service/api';
@@ -12,18 +13,24 @@ export default function Registro() {
   const [ email, setEmail ] = useState('');
   const [ senha, setSenha ] = useState('');
   const [ cep, setCep ] = useState('');
+  const [ img, setImg ] = useState();
+  const [ preview, setPreview ] = useState('')
 
 
   async function Cadastrar(){
+
+    const dataimg = new FormData();
+    dataimg.append('images', img)
+
     try{
- 
-     await api.post('/cadastrarCliente',{
+     const {data} = await api.post('/cadastrarCliente',{
       nome:nome,
       email:email,
       senha:senha,
-      cep:cep
+      cep:cep,
+      img: dataimg
      })
-     
+     alert(data)
      alert(`Voce foi cadastrado, seu nome: ${nome}`);
      return window.location.href = "/"
     }
@@ -32,6 +39,30 @@ export default function Registro() {
     }
    }
 
+   useEffect(() => {
+    
+   }, [img])
+
+
+   function MudaImg(e){
+
+    const formData = new FormData()
+    formData.append('images', e[0]);
+
+    var reader = new FileReader();
+    reader.readAsBinaryString(e[0]);
+
+    reader.onload = function() {
+        console.log();
+        setPreview(btoa(reader.result))
+    };
+    reader.onerror = function() {
+        console.log('there are some problems');
+    };
+
+      setImg(e[0])
+
+   }
 
 
   return (
@@ -51,11 +82,11 @@ export default function Registro() {
           </div>
 
           <div className="inputWIcon">
-            <h3><IoIosFingerPrint size="20px" /></h3>
+            <h3><IoIosMail size="20px" /></h3>
             <input type="email" name="email" placeholder="Digite aqui o seu email" onChange={ e => setEmail(e.target.value) }/>
           </div>
 
-          <div className="inputWIcon">
+          <div className="inputWIcon" style={{marginBottom: 20}}>
             <h3><IoIosFingerPrint size="20px" /></h3>
             <input type="password" name="senha" placeholder="******" onChange={ e => setSenha(e.target.value) }/>
           </div>
@@ -65,8 +96,19 @@ export default function Registro() {
             <input type="text" name="cep" placeholder="digite seu CEP" onChange={ e => setCep(e.target.value) }/>
           </div>
 
+          <div className="inputWIcon">
+            <div style={{margin: "0 auto", textAlign: 'center', display: "flex", justifyContent: 'center'}}>
+              <label id="labelForFileInput" for="fileInputReg">
+              { preview ? <img id="imgPreview" src={`data:${img.type.toString()};base64,${preview}`} alt="foto" />: <IoIosPerson size="35px" color="black" />}
+            </label>
+            <span style={{color:"white"}}>Adicionar foto</span>
+            </div>
+            
+            <input type="file" id="fileInputReg" name="foto" onChange={ e => MudaImg(e.target.files) }/>
+          </div>
+
         </div>
-        <button onClick={()=>Cadastrar()} className="BTNLogin">Cadastrar</button>
+        <button style={{marginTop: 100}} onClick={()=>Cadastrar()} className="BTNLogin">Cadastrar</button>
       </div>
        
       </div>

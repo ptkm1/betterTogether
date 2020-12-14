@@ -32,9 +32,9 @@ export default function Clientes() {
 
       async function getClientes(){
         try{
-          const {data} = await api.get('/listCliente');
-          //console.log(data.clientes)
-          return setClientes(data.clientes)
+          const {data} = await api.get('/cliente');
+          console.log(data)
+          return setClientes(data)
 
         }catch(error){
           console.log(error)
@@ -89,7 +89,7 @@ export default function Clientes() {
                   <div className="thumbCliente">
                     <h3>{e.img}</h3>
                   </div>
-                    <h3>{e.nome}</h3>
+                    <h3>{e.cliente}</h3>
             </div>
             <div className="clienteInformacoes">
                 <div className="infos1">

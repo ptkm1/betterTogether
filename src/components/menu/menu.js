@@ -1,4 +1,5 @@
-import React, { useContext } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useContext,useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 //Css
@@ -7,7 +8,9 @@ import './menu.css';
 //Imagens
 import Perfil from '../../assets/testeperfil.png';
 import Logo from '../../assets/logowhite.svg';
-import {FaInfoCircle, FaShoppingCart} from 'react-icons/fa';
+
+import {FaHome, FaShoppingCart} from 'react-icons/fa';
+import FotoSeUndefined from '../../assets/Ellipse 5.svg'
 
 //Modal
 import Modal from '../ModalCarrinho/modalCarrinho';
@@ -17,20 +20,26 @@ import { useState } from 'react';
 import Context from '../../contexts/auth';
 import { IoIosLogIn, IoIosLogOut,IoIosPerson, IoMdPersonAdd } from 'react-icons/io';
 
-export default function Navbar() {
+//Menu Responsivo
+import  MenuResponsivo  from '../menuResponsivo/menu';
 
+export default function Navbar() {
+  const [ FotoReserva, setFotoReserva ] = useState()
   const { logado, usuario } = useContext(Context);
   const [isModalVisible, setIsModalVisible] = useState(false);
+
 
   function Deslogar(){
     localStorage.clear();
     return window.location.href = "/"
   }
 
-  console.log(logado,usuario)
+  
+
   return (
     <>
-      <nav>
+      <MenuResponsivo />
+      <div className="nav-menu">
         
         <div className="ladoEsquerdo">
         <Link to='/' ><img src={Logo} alt="Logo"/></Link>
@@ -38,13 +47,14 @@ export default function Navbar() {
         <div className="ladoDireito">
                   
                   <div className="botoes">
-                      <Link to="/sobre" className="btnNav">
+
+                      <Link to="/" className="btnNav">
                         <div className="buttonNav">                        
-                              <h4>Sobre</h4>
-                              <FaInfoCircle />                        
+                              <h4>Home</h4>
+                              <FaHome />                        
                         </div>
-                      </Link>
-                      
+                      </Link> 
+
                       <Link onClick={() => setIsModalVisible(true)} className="btnNav" to="#">
                         <div className="buttonNav">               
                               <h4>Carrinho</h4> 
@@ -56,7 +66,7 @@ export default function Navbar() {
                  { logado ? ( <div className="perfil">
               <h4>{usuario.nome}</h4>
               <div className="circle">
-                <img src={Perfil} alt="Perfil foto"/>
+                <img src={usuario.img ? usuario.img : FotoSeUndefined} alt="Perfil foto"/>
               </div>
 
               <div className="dropdown">
@@ -67,14 +77,14 @@ export default function Navbar() {
             </div> ) : ( 
             
             <div className="loginEcadastro"> 
-              <Link className="BotoesLogin" to="/login"> <IoIosLogIn size="15px" />  Logar</Link>
-              <Link className="BotoesLogin" to="/cadastro"> <IoMdPersonAdd size="25px" /> Cadastrar</Link> 
+              <Link className="BotoesLogin" to="/login"> <span><IoIosLogIn /></span>  Logar</Link>
+              <Link className="BotoesLogin" to="/cadastro"> <span><IoMdPersonAdd /></span> Cadastrar</Link> 
             </div>
 
-             )}           
+            )}           
             
         </div>        
-      </nav>
+      </div>
        {isModalVisible ? <Modal onClose={() => setIsModalVisible(false)} /> : null}
     </>
   );

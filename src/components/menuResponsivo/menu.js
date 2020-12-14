@@ -87,7 +87,7 @@ btnmenu.addEventListener('click', ()=>{
         <ul style={{overflow: "hidden"}}>
           <div>
             <li><Link to='/' ><img src={Logo} alt="Logo"/></Link></li>
-            <li><Link> Sobre </Link></li>
+            <li><Link to="/"> Home </Link></li>
             <li><Link onClick={() => setIsModalVisible(true)} className="btnNav" id="btnNav" to="#"> Carrinho </Link></li>
           
           { logado ? (

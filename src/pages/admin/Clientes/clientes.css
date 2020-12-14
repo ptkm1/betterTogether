@@ -50,6 +50,9 @@
   width: 100%;
   height: 50vh;
   overflow: scroll;
+  display: flex;
+  flex-direction: column-reverse;
+
 }
 
 .scrollPage::-webkit-scrollbar {

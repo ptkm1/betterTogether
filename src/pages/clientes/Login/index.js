@@ -8,12 +8,9 @@ import Context from '../../../contexts/auth';
 
 export default function LoginClient() {
 
- const { logado, Autenticar, setEmail, setSenha} = useContext(Context);
- console.log(logado);
+ const { Autenticar, setEmail, setSenha} = useContext(Context);
 
-  function handleLogin(){
-    Autenticar();
-  }
+  function handleLogin(){Autenticar();}
 
   return (
     <>

@@ -15,6 +15,7 @@ export default function AddProdutos() {
   const [ preco, setPreco ] = useState('');
   const [ descricao, setDescricao ] = useState('');
   const [ imagem, setImagem ] = useState('');
+  const [ peso, setPeso ] = useState('');
 
   const [usuarioLogado , setUsuarioLogado ] = useState([])
 
@@ -36,20 +37,24 @@ export default function AddProdutos() {
   async function CadastrarProduto(){
 
     try{
-      await api.post('/cadastro/novo',{
-        produto: nomeProduto,
-        descrisao: descricao,
-        preco: estoque,
-        estoque: preco,
-        img: imagem
-      })
+      const data = new FormData();
+      data.append("produto", nomeProduto);
+      data.append("descrisao", descricao);
+      data.append("preco", preco);
+      data.append("estoque", estoque);
+      data.append("images", imagem);
+      data.append("peso", peso);
+
+      console.log(data);
+
+      await api.post("/produto", data);
       alert(`${nomeProduto} Cadastrado no banco!`)
       
       return window.location.href = "/dashboard"
 
 
     }catch(error){
-      console.log(error)
+      alert("Algo está errado, verifique com calma os campos.")
     }
 
   }
@@ -92,6 +97,7 @@ export default function AddProdutos() {
         <input type="text" placeholder="Digite o nome do produto" onChange={(e)=>setNomeProduto(e.target.value)}/>
         <input type="text" placeholder="Digite o estoque do produto" onChange={(e)=>setEstoque(e.target.value)}/>
         <input type="text" placeholder="Digite o preço do produto" onChange={(e)=>setPreco(e.target.value)}/>
+        <input type="text" placeholder="Digite o peso do produto" onChange={(e)=>setPeso(e.target.value)}/>
 
         <textarea name="descricao" id="desc" cols="30" rows="10" placeholder="Descreva um pouco sobre o produto ou serviço que
         você está vendendo." onChange={(e)=>setDescricao(e.target.value)} >
@@ -99,7 +105,7 @@ export default function AddProdutos() {
       </div>
 
       <div className="right">
-        <input type="file" name="addimgprodut" id="addimgprodut" onChange={(e)=>setImagem(e.target.value)}/>
+        <input type="file" name="addimgprodut" id="addimgprodut" onChange={(e)=>setImagem(e.target.files[0])}/>
         <button onClick={()=>CadastrarProduto()}>Adicionar</button>
       </div>
       

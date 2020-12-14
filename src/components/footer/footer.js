@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Cima, Baixo, Esquerda, Centro, Direita, EsquerdaBaixo, CentroBaixo, DireitaBaixo, Contato } from './style';
@@ -16,27 +17,27 @@ export default function Footer(){
                 <Cima>
                     <Esquerda>
                         <h4>Atalhos:</h4>
-                        <Link><h3>Meu perfil</h3></Link>
-                        <Link><h3>Meus pedidos</h3></Link>
-                        <Link><h3>Promoções</h3></Link>
+                        <Link to="alterdados"><h3>Meu perfil</h3></Link>
+                        <Link to="perfil"><h3>Meus pedidos</h3></Link>
+
                     </Esquerda>
                     <Centro>
                         <h3>CNPJ:00.000.000/0000-00</h3>
                     </Centro>
                     <Direita>
                         <h4>Better Together:</h4>
-                        <Link><h3>Sobre nós</h3></Link>
+
                         
                         <Contato>
                             <h3>Contato</h3>
-                            <Link>
+                            <a href="https://www.instagram.com/bettertogetherssa/" target="_blank">
                                 <IoLogoInstagram/>
-                            </Link>
-                            <Link>
+                            </a>
+                            <a href="https://wa.me/557198774901" target="_blank">
                                 <FaWhatsapp/>
-                            </Link>
+                            </a >
                         </Contato>
-                        <Link><h3>betteremail@gmail.com</h3></Link>
+                        <a href="mailto:bettertogetherssa@outlook.com"><h3>bettertogetherssa@outlook.com</h3></a>
                     </Direita>
                 </Cima>
                 <Baixo>
@@ -48,8 +49,8 @@ export default function Footer(){
                         <img src={Cartoes} alt="Cartoes"/>
                     </CentroBaixo>
                     <DireitaBaixo>
-                        <Link>
-                            <h4>Voltar ao topo</h4>
+                        <Link >
+                            <h4 onClick="$('html, body').animate({scrollTop:0}, 5000);">Voltar ao topo</h4>
                             <AiOutlineArrowUp />
                         </Link>
                     </DireitaBaixo>
